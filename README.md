@@ -24,7 +24,7 @@ Usage
 Initialization:
 
     var ndbc = require('ndbc');
-    var DBCache = new NDBC();
+    var DBCache = new ndbc();
     DBCache.init({
       cache: { port: '6379', host: '127.0.0.1', engine: 'redis'},	
       db: {  port: '27017', host: '127.0.0.1', engine: 'mongodb', database: 'mydb'}
