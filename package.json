@@ -1,0 +1,17 @@
+{
+	"name":"ndbc",
+	"version": "0.4.0",
+	"description": "A wrapper for MySQL, MongoDB, Redis and Memcache",
+	"keywords": ["mongodb", "mysql", "memcache", "redis"],
+	"bugs": {"url":"https://github.com/purefan/ndbc/issues", "email": "purefan@outlook.com"},
+	"license": "LGPL-2.0+",
+	"author": {"name": "Miguel Espinoza", "email": "purefan@outlook.com", "url": "http://about.me/purefan"},
+	"repository" : { "type" : "git", "url" : "https://github.com/purefan/ndbc.git"},
+	"dependencies": {
+		"redis": "*",
+		"mongodb": "*",
+		"memcache": "*",
+		"mysql": "*"
+	}
+
+}
