@@ -80,21 +80,37 @@ util.inherits(NDBC, EventEmitter);
 
 NDBC.prototype.cache = null;
 NDBC.prototype.db = null;
-NDBC.prototype.log = function(){for(var i in arguments){console.log(arguments[i]);}};
+NDBC.prototype._log = null;
+NDBC.prototype.log = function(){ if(this._log !== null) this._log(arguments); };//for(var i in arguments){console.log(arguments[i]);}};
 NDBC.prototype.cacheSubscriptions = {initalized: false};
 
-
-NDBC.prototype.init = function(params, callback)
+/**
+	params is an object which requires two objects: one for the cache and one for the database. 
+	It may also take a param "log" with a function which will receive debugging information
+	Example:
+		ndbc.init({
+			log: function(){ console.log(arguments);},
+			cache: {
+				port: 11211,
+				host: "localhost",
+				engine: "redis"
+			},
+			db: 
+		});
+*/
+NDBC.prototype.init = function(params)
 {
 	if (typeof params.log != 'undefined')
-		this.log = params.log,
-	this.initCache( params.cache.port, params.cache.host, params.cache.engine, params.cache.password);
-	this.initDB( params.db);
+		this._log = params.log;
+	if (typeof params.cache != 'undefined')
+		this.initCache( params.cache.port, params.cache.host, params.cache.engine, params.cache.password);
+	if (typeof params.db != 'undefined')
+		this.initDB( params.db);
 };
 
 NDBC.prototype.setLog = function(oLog)
 {
-	this.oLog = oLog;
+	this._log = oLog;
 	oLog('NDBC::setLog', 'Log is Ready'); 
 	this.emit('logReady', {}); 
 };
@@ -116,7 +132,7 @@ NDBC.prototype.initCache = function(port, host, engine, password)
 		if (this.log !== null)
 		{
 			this.cache.on('error', function(e){ self.log('initCache', 'Red:Memcache Error', e);});
-			this.cache.on('connect', function(){self.log('initCache', 'Green:Connected to Memcached'); self.emit('cacheready', {});});
+			this.cache.on('connect', function(){self.log('initCache', 'Green:Connected to Memcached'); self.emit('cacheready', {engine: "Memcached"});});
 		}
 		this.cache.connect();
 	}
@@ -125,7 +141,7 @@ NDBC.prototype.initCache = function(port, host, engine, password)
 		this.cache = oRedis.createClient(port);
 		if (password !== false)	
 			this.cache.auth(password);
-		this.cache.on('ready', function(){ self.log('Green:DB::initCache', 'Connected to Redis'); self.emit('cacheready', {});});
+		this.cache.on('ready', function(){ self.log('Green:DB::initCache', 'Connected to Redis'); self.emit('cacheready', {engine: "Redis"});});
 		this.cache.on('error', function(err){ console.log(err);self.log('Red:DB::Redis_Error', err);});
 		this.cache.on('end', function(){ self.log('DB::Redis', 'Connection to Redis closed'); });
 		
@@ -172,7 +188,10 @@ NDBC.prototype.initMongo = function(params)
 NDBC.prototype.initMySQL = function(params)
 {
 	var self = this;
-	this.db = oMysql.createClient( params );
+	var oMysql = require("mysql");
+
+	this.db = oMysql.createConnection( params );
+	this.db.connect();
 	this.db.query('SELECT 1', function(err, results, fields){
 		if (err)
 		{
@@ -182,7 +201,7 @@ NDBC.prototype.initMySQL = function(params)
 		else
 		{
 			self.log('DB::initDB','Green:Connected to MySQL');
-			self.emit('dbready', {engine: 'mysql'});
+			self.emit('dbready', {engine: 'Mysql'});
 		}
 	});
 };
@@ -253,7 +272,8 @@ NDBC.prototype.getFromMongo = function(params, callback)
 {
 	var self = this;
 	this.log('DB::getFromMongo', params);
-	
+	if (typeof params.join !== 'undefined')
+		throw new Error("Mongo does not implement joins");
 	// make sure theres a where
 	params['where'] = params['where'] || null;
 	params['select'] = params['select'] || [];
