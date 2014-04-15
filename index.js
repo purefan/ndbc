@@ -1,4 +1,3 @@
-
 var oRedis = require('redis');
 var EventEmitter = require('events').EventEmitter;
 var util = require('util');
@@ -110,7 +109,7 @@ NDBC.prototype.init = function(params)
 
 NDBC.prototype.setLog = function(oLog)
 {
-	this._log = oLog;
+	this._log = this.log = oLog;
 	oLog('NDBC::setLog', 'Log is Ready'); 
 	this.emit('logReady', {}); 
 };
