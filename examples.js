@@ -4,8 +4,8 @@ var ndbc = require("./index.js"),
 var mysql = {
 		host: "localhost",
 		port: 3306,
-		user: "purefan",
-		password: "phpfox",
+		user: "root",
+		password: "MiKe:5:PuRe",
 		engine: "mysql",
 		database: "test"
 	};
@@ -25,7 +25,7 @@ ndbc.init({
 		engine: "redis",
 		password: null // this is optional
 	},
-	db: mongodb 
+	db: mysql 
 	// log: console.log // this is optional and defaults to null
 });
 
@@ -33,10 +33,19 @@ ndbc.once('cacheready', function(data){
 	console.log("Cache is ready: " + data.engine);
 });
 
+
+ndbc.store('test_1',{m_key: 'first row', m_value: 'some value'}, function(data){
+	ndbc.updateMySQL({
+		from: 'test_1', 
+		set: { m_key: '"moded 1st row"', m_value: '"moded some value"'},
+		where: 'm_key = "first row"'}, function(fank){
+			console.log('Updated', fank);
+		});
+});
+
+// To create a table is not a common task in a program. This feature is intentionally left out.
 ndbc.once('dbready', function(data){
 	console.log("1. DB is ready: " + data.engine, "1.2 Lets insert into the first table");
-	// To create a table is not a common task in a program. This feature is intentionally left out.
-
 	// Test inserting a value
 	var key_1 = "my first key",
 		value_1 = "my first value is " + Math.round(Math.random() * 364728);

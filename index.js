@@ -261,6 +261,23 @@ NDBC.prototype.getFromCache = function(key, callback, errcallback)
 	});
 };
 
+
+NDBC.prototype.updateMySQL = function(params, callback)
+{
+	var sql = 'UPDATE ';
+	sql += params['from'] + ' ';
+	sql += 'SET ';
+	for( var i in params['set']) 
+		sql += i + ' = ' + params['set'][i] + ', ';
+	sql = sql.substr(0, sql.length - 2) + ' ';
+	sql += 'WHERE ' + params['where'];
+	console.log(sql, 'end');
+	this.db.query(sql, function(err, data){
+		if (err) return console.error(err);
+		callback(data);
+	});
+};
+
 NDBC.prototype.getFromDB = function(params, callback)
 {
 	if (this.dbEngine == 'mysql') this.getFromMySQL(params, callback);
@@ -372,12 +389,23 @@ NDBC.prototype.removeCache = function(cacheKey)
 	}
 };
 
-NDBC.prototype.storeInCache = function(key, data, callback)
+
+/**
+	@param key object|string If its an object it must contain {key: string, data: string, callback: function} 
+	and optionally a param expire:int
+	Support for expire is only available in redis at this moment, I will add it for memcahce at a later time.
+*/
+NDBC.prototype.storeInCache = function(key, data, callback, expire)
 {
+	if (typeof key == "object"){
+		if (this.cacheEngine == 'redis') return this.storeInRedis(key['key'], key['data'], key['callback'], key['expire']);
+		return this.storeInMemcache(key['key'], key['data'], key['callback']);
+	}
+
 	if (this.cacheEngine == 'redis')
-		this.storeInRedis(key, data, callback);
-	else
-		this.storeInMemcache(key, data, callback);
+		return this.storeInRedis(key, data, callback, expire);
+	
+	this.storeInMemcache(key, data, callback);
 };
 
 /**
@@ -385,9 +413,16 @@ NDBC.prototype.storeInCache = function(key, data, callback)
 *	its fortunate that both memcache and redis implementations use the same
 *	name for this function
 */
-NDBC.prototype.storeInRedis = function(key, data, callback)
+NDBC.prototype.storeInRedis = function(key, data, callback, expire)
 {
-	this.storeInMemcache(key, data, callback);
+	if (typeof data != 'string') data = JSON.stringify(data);
+
+	if (typeof expire != "undefined")
+		return this.cache.set(key, data, 'EX', expire, function(err, info){
+			if (!err) return callback();
+			console.error(err);
+		});
+	this.storeInMemcache(key,data,callback);
 };
 
 NDBC.prototype.storeInMemcache = function(key, data, callback)
