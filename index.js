@@ -262,8 +262,10 @@ NDBC.prototype.getFromCache = function(key, callback, errcallback)
 };
 
 
+/* @deprecated @see updateDB */
 NDBC.prototype.updateMySQL = function(params, callback)
 {
+	throw new Error('deprecated');
 	var sql = 'UPDATE ';
 	sql += params['from'] + ' ';
 	sql += 'SET ';
@@ -495,7 +497,7 @@ NDBC.prototype.updateDB = function(params, callback)
 	{
 		for (var i in params['fields'])
 			sql += i + ' = ' + params['fields'][i] + ', ';
-		sql = sql.substr(0, sql.lastIndexOf(', '));
+		sql = sql.substr(0, sql.lastIndexOf(', ')) + ' ';
 	}
 	
 	sql += 'WHERE ' + params['where'];
