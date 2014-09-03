@@ -447,7 +447,7 @@ NDBC.prototype.storeInMemcache = function(key, data, callback)
 NDBC.prototype.fetch = function(params, callback)
 {
 	var self = this;
-	// this.log('DB::fetch', params);
+	if (typeof this.cache == 'undefined' || this.cache == null)params['nocache'] = true;
 	if (typeof params['nocache'] != 'undefined' && params['nocache'] === true)
 	{
 		self.getFromDB(params, callback);
